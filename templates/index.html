@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ManishBot Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+        }
+        .chat-box {
+            max-width: 600px;
+            margin: auto;
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin: 10px 0;
+        }
+        .user {
+            text-align: right;
+            color: blue;
+        }
+        .bot {
+            text-align: left;
+            color: green;
+        }
+        #input-area {
+            display: flex;
+            margin-top: 20px;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            margin-left: 10px;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Chat with ManishBot</h2>
+
+    <div class="controls">
+        <button onclick="clearChat()">🧹 Clear Chat</button>
+    </div>
+
+    <div class="chat-box" id="chat-box"></div>
+
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Ask a question..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById("chat-box");
+
+        function appendMessage(sender, text) {
+            const div = document.createElement("div");
+            div.className = `message ${sender}`;
+            div.innerHTML = `<b>${sender === 'user' ? 'You' : 'ManishBot'}:</b> ${text}`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById("user-input");
+            const message = input.value.trim();
+            if (!message) return;
+
+            appendMessage("user", message);
+            input.value = "";
+
+            const res = await fetch("/ask", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await res.json();
+            const reply = data.response || data.error;
+            appendMessage("bot", reply);
+        }
+
+        function clearChat() {
+            chatBox.innerHTML = "";
+            showWelcomeMessage();
+        }
+
+        function showWelcomeMessage() {
+            appendMessage("bot", "👋 Hi, I'm <b>ManishBot</b>. Ask me any programming or architecture question and I'll assist you!");
+        }
+
+        // Show welcome message on load
+        window.onload = showWelcomeMessage;
+
+        // Enter to send
+        document.getElementById("user-input")
+            .addEventListener("keydown", e => { if (e.key === "Enter") sendMessage(); });
+    </script>
+</body>
+</html>
